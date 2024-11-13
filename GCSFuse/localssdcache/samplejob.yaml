@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gcs-100-fuse-singlefile
+  namespace: ns-fusetest
+spec:
+  parallelism: 100
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/ephemeral-storage-request: 50Gi
+    spec:
+      containers:
+      - name: reader
+        image: busybox
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 1000m
+            memory: 512Mi
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo "first read with cache missing"
+            time cat /data/sample_data/file_2*  > /dev/null
+
+            echo "2nd read with caahe"
+            time cat /data/sample_data/file_2* > /dev/null
+
+            echo "cp file to local"
+            time cp /data/sample_data/file_2* /tmp/.
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /data
+          readOnly: true
+      serviceAccountName: ksa
+      volumes:
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: thomashk-gcsfuse
+            mountOptions: "implicit-dirs"
+            fileCacheCapacity: "30Gi"
+      restartPolicy: Never
+  backoffLimit: 1
