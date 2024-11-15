@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gcscombine1
+spec:
+  parallelism: 1
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/memory-request: 10Gi
+        gke-parallelstore/volumes: "true"
+        gke-parallelstore/cpu-request: 500m
+        gke-parallelstore/memory-request: 1Gi
+        gke-parallelstore/ephemeral-storage-request: 5Gi
+        gke-parallelstore/ephemeral-storage-limit: 10Gi
+    spec:
+      containers:
+      - name: largeimagetest
+        image: us-central1-docker.pkg.dev/thomashk-mig/thomashk-aitest/llama7bmodel
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 1000m
+            memory: 512Mi
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo "test on the large image"
+            sleep 5000 
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumeMounts:
+        - name: gcs-fuse-csi-ephemeral
+          mountPath: /data
+          readOnly: true
+        - mountPath: "/models"
+          name: parallelstore-pv 
+      serviceAccountName: ksa
+      volumes:
+      - name: parallelstore-pv 
+        persistentVolumeClaim:
+          claimName: parallelstore-pvc
+      - name: gcs-fuse-csi-ephemeral
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: thomashk-gcsfuse
+            mountOptions: "implicit-dirs,file-cache:enable-parallel-downloads:true"
+            fileCacheCapacity: "10Gi"
+      restartPolicy: Never
+  backoffLimit: 1
