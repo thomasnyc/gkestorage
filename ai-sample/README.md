@@ -29,7 +29,11 @@ Create a GKE cluster - with image-streaming , GcsFuseCsiDriver and Parallelstore
 
 
 
-<pre class="prettyprint">gcloud container clusters create ai-testing-1    --addons GcsFuseCsiDriver     --addons=ParallelstoreCsiDriver    --cluster-version=1.30.5-gke.1443001     --location=us-central1   --workload-pool=thomashk-mig.svc.id.goog  --image-type="COS_CONTAINERD"  --enable-image-streaming  </pre>
+<pre class="prettyprint">gcloud container clusters create ai-testing-1    
+    --addons GcsFuseCsiDriver     --addons=ParallelstoreCsiDriver    
+    --cluster-version=1.30.5-gke.1443001     --location=us-central1   
+    --workload-pool=thomashk-mig.svc.id.goog  --image-type="COS_CONTAINERD"  
+    --enable-image-streaming  </pre>
 
 
 <p>
@@ -38,7 +42,12 @@ Create a nodepool with scaling capability - w 2nd boot disk using container imag
 
 
 
-<pre class="prettyprint">gcloud container node-pools create testpool     --cluster=ai-testing-1    --location=us-central1     --image-type="COS_CONTAINERD"     --enable-image-streaming --secondary-boot-disk=disk-image=projects/thomashk-mig/global/images/test-llama7b,mode=CONTAINER_IMAGE_CACHE  --machine-type=n1-standard-64 --enable-autoscaling --num-nodes 1 --min-nodes 1 --max-nodes 10 </pre>
+<pre class="prettyprint">gcloud container node-pools create testpool     
+    --cluster=ai-testing-1    --location=us-central1     --image-type="COS_CONTAINERD"    
+    --enable-image-streaming 
+    --secondary-boot-disk=disk-image=projects/thomashk-mig/global/images/test-llama7b,mode=CONTAINER_IMAGE_CACHE  
+    --machine-type=n1-standard-64 --enable-autoscaling 
+    --num-nodes 1 --min-nodes 1 --max-nodes 10 </pre>
 
 
 <p>
@@ -47,7 +56,8 @@ Create the credential / service account - this example name = ksa.  This is requ
 
 
 
-<pre class="prettyprint">gcloud container clusters get-credentials ai-testing-1  --location=us-central1
+<pre class="prettyprint">gcloud container clusters get-credentials ai-testing-1  
+    --location=us-central1
 kubectl create serviceaccount ksa</pre>
 
 
